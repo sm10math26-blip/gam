@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Quiz Adventure Game</title>
+<title>G10 Quiz Adventure Pro</title>
 
 <style>
 body{
@@ -14,7 +14,7 @@ body{
   color:white;
 }
 
-#gameArea{
+#game{
   position:relative;
   width:100vw;
   height:100vh;
@@ -27,14 +27,14 @@ body{
   height:50px;
   background:#38bdf8;
   border-radius:10px;
+  left:100px;
   top:300px;
-  left:50px;
 }
 
-.questionBox{
+.box{
   position:absolute;
-  width:60px;
-  height:60px;
+  width:55px;
+  height:55px;
   background:#f59e0b;
   border-radius:50%;
   display:flex;
@@ -44,20 +44,28 @@ body{
   font-weight:bold;
 }
 
+.coin{
+  position:absolute;
+  width:25px;
+  height:25px;
+  background:gold;
+  border-radius:50%;
+}
+
 #hud{
   position:absolute;
   top:10px;
   left:10px;
-  font-size:20px;
+  font-size:18px;
 }
 
-#quizModal{
+#modal{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,0.8);
   display:none;
   justify-content:center;
   align-items:center;
+  background:rgba(0,0,0,0.7);
 }
 
 #card{
@@ -67,24 +75,17 @@ body{
   width:300px;
 }
 
-button{
+.btn{
   width:100%;
   margin:5px 0;
   padding:10px;
-  font-size:16px;
-  border:none;
-  border-radius:8px;
-  cursor:pointer;
-}
-
-.option{
   background:#334155;
+  border:none;
   color:white;
+  border-radius:8px;
 }
 
-.option:hover{
-  background:#475569;
-}
+.btn:hover{background:#475569;}
 
 #controls{
   position:fixed;
@@ -95,147 +96,190 @@ button{
   gap:20px;
 }
 
-.ctrl{
-  width:80px;
-  height:80px;
+.cbtn{
+  width:70px;
+  height:70px;
   border-radius:50%;
-  font-size:30px;
+  font-size:25px;
 }
 </style>
 </head>
 
 <body>
 
-<div id="gameArea">
+<div id="game">
 
 <div id="hud">
-❤️ Health: <span id="health">3</span> |
-⭐ Score: <span id="score">0</span>
+❤️ <span id="hp">3</span> |
+⭐ <span id="score">0</span> |
+🪙 <span id="coins">0</span>
 </div>
 
 <div id="player"></div>
 
-<div class="questionBox" style="left:300px;top:250px">?</div>
-<div class="questionBox" style="left:600px;top:250px">?</div>
-<div class="questionBox" style="left:900px;top:250px">?</div>
+<div class="box" style="left:400px;top:250px">?</div>
+<div class="box" style="left:700px;top:250px">?</div>
+<div class="box" style="left:1000px;top:250px">?</div>
+
+<div class="coin" style="left:500px;top:200px"></div>
+<div class="coin" style="left:850px;top:180px"></div>
 
 </div>
 
-<div id="quizModal">
+<div id="modal">
   <div id="card">
-    <h3 id="qText"></h3>
-    <div id="options"></div>
+    <h3 id="q"></h3>
+    <div id="opt"></div>
     <p id="msg"></p>
   </div>
 </div>
 
 <div id="controls">
-<button class="ctrl" onclick="move(-20)">⬅</button>
-<button class="ctrl" onclick="move(20)">➡</button>
+<button class="cbtn" onclick="left()">⬅</button>
+<button class="cbtn" onclick="jump()">⤒</button>
+<button class="cbtn" onclick="right()">➡</button>
 </div>
 
 <script>
 let player = document.getElementById("player");
-let healthEl = document.getElementById("health");
+let hpEl = document.getElementById("hp");
 let scoreEl = document.getElementById("score");
+let coinEl = document.getElementById("coins");
 
-let modal = document.getElementById("quizModal");
-let qText = document.getElementById("qText");
-let options = document.getElementById("options");
+let modal = document.getElementById("modal");
+let qEl = document.getElementById("q");
+let optEl = document.getElementById("opt");
 let msg = document.getElementById("msg");
 
-let x = 50;
-let health = 3;
-let score = 0;
-let paused = false;
+let x=100, y=300, vy=0;
+let gravity=0.8;
+let onGround=true;
 
-let questions = [
-  {
-    q:"What is the formula of water?",
-    options:["H2O","CO2","NaCl","O2"],
-    answer:"H2O"
-  },
-  {
-    q:"Which gas is used in respiration?",
-    options:["Hydrogen","Oxygen","Nitrogen","Helium"],
-    answer:"Oxygen"
-  },
-  {
-    q:"2 + 2 × 3 = ?",
-    options:["12","10","8","6"],
-    answer:"8"
-  }
+let hp=3, score=0, coins=0;
+let paused=false;
+
+let questions=[
+ {q:"Water formula?",o:["H2O","CO2","O2","NaCl"],a:"H2O"},
+ {q:"Respiration gas?",o:["Oxygen","Hydrogen","Helium","Nitrogen"],a:"Oxygen"},
+ {q:"2+2×3?",o:["12","10","8","6"],a:"8"}
 ];
 
-function draw(){
-  player.style.left = x + "px";
-  checkCollision();
+function update(){
+  player.style.left=x+"px";
+  player.style.top=y+"px";
 }
 
-function move(val){
-  if(paused) return;
-  x += val;
-  draw();
+function left(){ if(!paused) x-=20; }
+function right(){ if(!paused) x+=20; }
+
+function jump(){
+  if(onGround){
+    vy=-12;
+    onGround=false;
+  }
 }
 
-function checkCollision(){
-  let boxes = document.querySelectorAll(".questionBox");
+document.addEventListener("keydown",(e)=>{
+  if(e.key==="ArrowLeft") left();
+  if(e.key==="ArrowRight") right();
+  if(e.key===" ") jump();
+});
 
-  boxes.forEach((b,i)=>{
-    let bx = b.getBoundingClientRect().left;
-    let px = player.getBoundingClientRect().left;
+function physics(){
+  vy+=gravity;
+  y+=vy;
 
-    if(Math.abs(px - bx) < 40){
+  if(y>=300){
+    y=300;
+    vy=0;
+    onGround=true;
+  }
+}
+
+function checkBoxes(){
+  document.querySelectorAll(".box").forEach((b,i)=>{
+    let bx=b.getBoundingClientRect().left;
+    let px=player.getBoundingClientRect().left;
+
+    if(Math.abs(px-bx)<40 && b.style.display!=="none"){
       openQ(i,b);
     }
   });
 }
 
+function checkCoins(){
+  document.querySelectorAll(".coin").forEach(c=>{
+    let cx=c.getBoundingClientRect().left;
+    let px=player.getBoundingClientRect().left;
+
+    if(Math.abs(px-cx)<30){
+      coins++;
+      coinEl.innerText=coins;
+      c.style.display="none";
+    }
+  });
+}
+
+function getQ(){
+  return questions[Math.floor(Math.random()*questions.length)];
+}
+
 function openQ(i,box){
-  paused = true;
+  paused=true;
 
-  let q = questions[i];
+  let q=getQ();
 
-  qText.innerText = q.q;
-  options.innerHTML = "";
-  msg.innerText = "";
+  qEl.innerText=q.q;
+  optEl.innerHTML="";
+  msg.innerText="";
 
-  q.options.forEach(op=>{
-    let btn = document.createElement("button");
-    btn.className = "option";
-    btn.innerText = op;
+  q.o.forEach(op=>{
+    let btn=document.createElement("button");
+    btn.className="btn";
+    btn.innerText=op;
 
-    btn.onclick = ()=>{
+    btn.onclick=()=>{
 
-      if(op === q.answer){
-        score += 10;
-        scoreEl.innerText = score;
-        msg.innerText = "Correct!";
-        box.style.display = "none";
+      if(op===q.a){
+        score+=10;
+        scoreEl.innerText=score;
+        msg.innerText="Correct!";
+        box.style.display="none";
       }else{
-        health--;
-        healthEl.innerText = health;
-        msg.innerText = "Wrong!";
+        hp--;
+        hpEl.innerText=hp;
+        msg.innerText="Wrong!";
       }
 
       setTimeout(()=>{
-        modal.style.display = "none";
-        paused = false;
-      },800);
+        modal.style.display="none";
+        paused=false;
+      },700);
 
-      if(health <= 0){
-        alert("Game Over!");
+      if(hp<=0){
+        alert("Game Over");
         location.reload();
       }
     };
 
-    options.appendChild(btn);
+    optEl.appendChild(btn);
   });
 
-  modal.style.display = "flex";
+  modal.style.display="flex";
 }
 
-draw();
+function loop(){
+  if(!paused){
+    physics();
+    checkBoxes();
+    checkCoins();
+  }
+
+  update();
+  requestAnimationFrame(loop);
+}
+
+loop();
 </script>
 
 </body>
