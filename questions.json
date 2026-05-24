@@ -1,0 +1,17 @@
+[
+  {
+    "question":"What is the formula of water?",
+    "options":["H2O","CO2","NaCl","O2"],
+    "answer":"H2O"
+  },
+  {
+    "question":"Which gas is used in respiration?",
+    "options":["Hydrogen","Oxygen","Nitrogen","Helium"],
+    "answer":"Oxygen"
+  },
+  {
+    "question":"2 + 2 × 3 = ?",
+    "options":["12","10","8","6"],
+    "answer":"8"
+  }
+]

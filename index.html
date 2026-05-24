@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>G10 Quiz Adventure</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="gameArea">
+
+<div id="hud">
+  <div>❤️ Health: <span id="health">3</span></div>
+  <div>⭐ Score: <span id="score">0</span></div>
+</div>
+
+<div id="player"></div>
+
+<div class="platform"></div>
+
+<div class="questionBox" id="q1" style="left:350px;top:250px">?</div>
+<div class="questionBox" id="q2" style="left:700px;top:250px">?</div>
+<div class="questionBox" id="q3" style="left:1050px;top:250px">?</div>
+
+</div>
+
+<div id="quizModal">
+  <div id="quizCard">
+    <div id="questionText"></div>
+    <div id="options"></div>
+    <div id="message"></div>
+  </div>
+</div>
+
+<div id="mobileControls">
+  <button class="controlBtn" id="leftBtn">⬅</button>
+  <button class="controlBtn" id="rightBtn">➡</button>
+</div>
+
+<script src="game.js"></script>
+</body>
+</html>
